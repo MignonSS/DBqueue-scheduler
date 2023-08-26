@@ -13,4 +13,8 @@ public interface WalletQueueRepository extends JpaRepository<WalletQueue, Long> 
 
     @Query("select wq from WalletQueue wq join fetch wq.wallet w where wq.id > :lastWalletQueueId")
     List<WalletQueue> getWalletQueues100OfEach(Long lastWalletQueueId, Pageable pageable);
+
+    @Query("select wq from WalletQueue wq join fetch wq.wallet w")
+    List<WalletQueue> getWalletQueues100OfEachV2(Pageable pageable);
+
 }

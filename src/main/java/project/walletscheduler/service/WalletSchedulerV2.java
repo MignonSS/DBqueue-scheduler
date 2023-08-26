@@ -3,6 +3,7 @@ package project.walletscheduler.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import project.walletscheduler.domain.WalletQueue;
 import project.walletscheduler.repository.WalletQueueRepository;
@@ -13,15 +14,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WalletScehduler {
-
+public class WalletSchedulerV2 {
     private final WalletQueueRepository walletQueueRepository;
     private final WalletUpdaterService walletUpdaterService;
+
 
     private static Long lastWalletQueueId = 0L;
 
@@ -37,7 +37,9 @@ public class WalletScehduler {
         ExecutorService executorService = Executors.newFixedThreadPool(10);
 
         // CompletableFuture를 사용한 비동기 작업으로 각 userId 별로 나누어 하나의 스레드에 같은 userId의 작업만 구분 할당하기
-        List<CompletableFuture<Void>> taskResult = LongStream.rangeClosed(1, 10)
+        List<CompletableFuture<Void>> taskResult = walletQueues.stream()
+                .mapToLong(wq -> wq.getWallet().getUserId())
+                .distinct()
                 .mapToObj(userId -> CompletableFuture.runAsync(() -> {
                     // 비동기로 실행될 작업
                     System.out.println("Async task is running");
@@ -69,4 +71,5 @@ public class WalletScehduler {
         executorService.shutdown();
     }
 }
+
 

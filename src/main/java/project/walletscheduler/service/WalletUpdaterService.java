@@ -21,7 +21,5 @@ public class WalletUpdaterService {
 
         wallet.changeBalance(walletQueue.getBalances());
         walletQueueRepository.delete(walletQueue);
-
-        walletRepository.saveAndFlush(wallet);
     }
 }
