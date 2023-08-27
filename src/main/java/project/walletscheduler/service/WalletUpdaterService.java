@@ -8,6 +8,8 @@ import project.walletscheduler.domain.WalletQueue;
 import project.walletscheduler.repository.WalletQueueRepository;
 import project.walletscheduler.repository.WalletRepository;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class WalletUpdaterService {
@@ -17,9 +19,10 @@ public class WalletUpdaterService {
 
     @Transactional
     public void updateWallet(WalletQueue walletQueue) {
-        Wallet wallet = walletRepository.findByIdWithPessimisticLock(walletQueue.getWallet().getId());
+        Optional<Wallet> wallet = walletRepository.findByIdWithPessimisticLock(walletQueue.getWallet().getId());
+        if (wallet.isEmpty()) return;
 
-        wallet.changeBalance(walletQueue.getBalances());
+        wallet.get().changeBalance(walletQueue.getBalances());
         walletQueueRepository.delete(walletQueue);
     }
 }

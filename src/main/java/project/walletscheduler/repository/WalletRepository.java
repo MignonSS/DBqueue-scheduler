@@ -7,11 +7,12 @@ import org.springframework.data.repository.query.Param;
 import project.walletscheduler.domain.Wallet;
 
 import javax.persistence.LockModeType;
+import java.util.Optional;
 
 public interface WalletRepository extends JpaRepository<Wallet, Long> {
 
     @Lock(value = LockModeType.PESSIMISTIC_WRITE)
     @Query("select s from Wallet s where s.id = :id")
-    Wallet findByIdWithPessimisticLock(@Param("id") Long id);
+    Optional<Wallet> findByIdWithPessimisticLock(@Param("id") Long id);
 
 }

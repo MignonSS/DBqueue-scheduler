@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WalletSchedulerV3 {
+public class WalletScheduler {
     private final WalletQueueRepository walletQueueRepository;
     private final WalletUpdaterService walletUpdaterService;
 
@@ -38,11 +38,11 @@ public class WalletSchedulerV3 {
                 .mapToLong(wq -> wq.getWallet().getUserId())
                 .distinct()
                 .mapToObj(userId -> CompletableFuture.runAsync(() -> {
-                    // DB에서 가져온 100개의 walletQueue 중에서 현재 walletId 에 해당하는 walletQueue만 필터링
+                    // DB에서 가져온 100개의 walletQueue 중에서 현재 walletId 에 해당하는 walletQueue만 필터링하여 하나의 스레드에 작업 할당
                     walletQueues.stream()
                             .filter(walletQueue -> walletQueue.getWallet().getUserId() == userId)
                             .peek(walletQueue -> System.out.println("walletQueueId : " + walletQueue.getId() + ", userId : " + walletQueue.getWallet().getUserId() + ", thread : " + Thread.currentThread().getName()))
-                            .forEach(walletUpdaterService::updateWallet); // 필터링된 walletQueues 에 대한 작업 처리
+                            .forEach(walletUpdaterService::updateWallet);
 
                 }, executorService))
                 .collect(Collectors.toList());

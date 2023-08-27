@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ShutdownListener implements ApplicationListener<ContextClosedEvent> {
 
-    private final WalletSchedulerV3 walletScheduler;
+    private final WalletScheduler walletScheduler;
 
     @Override
     public void onApplicationEvent(ContextClosedEvent event) {
