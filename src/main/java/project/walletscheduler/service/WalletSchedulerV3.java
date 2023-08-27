@@ -22,7 +22,7 @@ public class WalletSchedulerV3 {
     private final WalletQueueRepository walletQueueRepository;
     private final WalletUpdaterService walletUpdaterService;
 
-    ExecutorService executorService = Executors.newFixedThreadPool(10);
+    private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     @Scheduled(fixedDelay = 100)
     public void scheduleWalletTask() {
@@ -30,23 +30,14 @@ public class WalletSchedulerV3 {
         List<WalletQueue> walletQueues = walletQueueRepository.getWalletQueues100OfEachV2(PageRequest.of(0, 100));
 
         if (walletQueues.size() == 0) {
-            executorService.shutdown();
             return;
         }
 
-        if (executorService.isShutdown()) {
-            if (walletQueueRepository.count() < 10000) return;
-            else executorService = Executors.newFixedThreadPool(10);
-        }
-
         // CompletableFuture를 사용한 비동기 작업으로 각 userId 별로 나누어 하나의 스레드에 같은 userId의 작업만 구분 할당하기
-        List<CompletableFuture<Void>> taskResult = walletQueues.stream()
+        List<CompletableFuture<Void>> taskResult = walletQueues.parallelStream()
                 .mapToLong(wq -> wq.getWallet().getUserId())
                 .distinct()
                 .mapToObj(userId -> CompletableFuture.runAsync(() -> {
-                    // 비동기로 실행될 작업
-                    System.out.println("Async task is running");
-
                     // DB에서 가져온 100개의 walletQueue 중에서 현재 walletId 에 해당하는 walletQueue만 필터링
                     List<WalletQueue> curTasks = walletQueues.stream()
                             .filter(walletQueue -> walletQueue.getWallet().getUserId() == userId)
@@ -70,6 +61,10 @@ public class WalletSchedulerV3 {
         } catch (InterruptedException | ExecutionException e) {
             log.error("error: {}", e.toString());
         }
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
 }
 
