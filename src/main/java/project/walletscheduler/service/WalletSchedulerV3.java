@@ -39,16 +39,11 @@ public class WalletSchedulerV3 {
                 .distinct()
                 .mapToObj(userId -> CompletableFuture.runAsync(() -> {
                     // DB에서 가져온 100개의 walletQueue 중에서 현재 walletId 에 해당하는 walletQueue만 필터링
-                    List<WalletQueue> curTasks = walletQueues.stream()
+                    walletQueues.stream()
                             .filter(walletQueue -> walletQueue.getWallet().getUserId() == userId)
-                            .collect(Collectors.toList());
+                            .peek(walletQueue -> System.out.println("walletQueueId : " + walletQueue.getId() + ", userId : " + walletQueue.getWallet().getUserId() + ", thread : " + Thread.currentThread().getName()))
+                            .forEach(walletUpdaterService::updateWallet); // 필터링된 walletQueues 에 대한 작업 처리
 
-                    // 필터링된 walletQueues 에 대한 작업 처리
-                    for (WalletQueue walletQueue : curTasks) {
-                        System.out.println("walletQueueId : " + walletQueue.getId() + ", userId : " + userId + ", thread : " + Thread.currentThread().getName());
-
-                        walletUpdaterService.updateWallet(walletQueue);
-                    }
                 }, executorService))
                 .collect(Collectors.toList());
 
